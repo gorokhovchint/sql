@@ -178,57 +178,44 @@ SELECT --year, month,
             ELSE 'NOT NULL' END
 
 -- Оконные функции - нужны тогда, когда нужно получить в текущей таблице, значение соседних строк не меняя группировки. 
--- 3 query) user_id=682|shareOfRevenue=4,1 
--- смотрим на долю оплат по каждому юзеру, 
+-- 2 query - смотрим на долю оплат по каждому юзеру, 
 SELECT
      user_id,
      orderSum / allOrderSum * 100 AS shareOfRevenue
 FROM 
 (
--- 2 query) user_id=682|orderSum=3500руб|allOrderSum=9800руб 
--- пишем оконку где к первому запросу дабавляется строка с суммой всех оплат без группировки(общая) 
--- т.е применили оконную функцию и посчитали сумму всех оплат(100% поля orderSum), при этом в результатирующей таблице сохранился первый запрос.
-     SELECT  
-     user_id,
-     orderSum,
-     sum(orderSum) OVER () AS allOrderSum - вызываем оконую функцию и задаем алиас
-FROM 
-(
--- 1 query) user_id=682|orderSum=3500руб 
--- составляем наш первый запрос, где посчитали сумму оплату по каждому юзеру . 
+-- 1 query - составляем наш первый запрос, где посчитали сумму оплат по каждому юзеру . 
+-- пишем оконку, где дабавляется строка с суммой всех оплат без группировки(общая) 
+-- т.е применили оконную функцию и посчитали сумму всех оплат(100% поля orderSum), при этом в результатирующей таблице сохранилась первая группировка.
      SELECT 
      user_id,
-          sum(order_sum) AS orderSum
+          sum(order_sum) AS orderSum,
+          sum(sum(order_sum)) OVER () AS allOrderSum -- вызываем оконую функцию и задаем алиас
      FROM `chint-297212.test_dataset1.e1_orders - orders`
-     GROUP BY 1 )
+     GROUP BY 1
 )
 ORDER BY shareOfRevenue DESC
 
 -- Оконные функции - добавляем параметры 
+-- Параметр ROWS позволяет ограничить строки в окне, указывая фиксированное количество строк, предшествующих или следующих за текущей.
+-- В выражении для ограничения строк ROWS также можно использовать следующие операторы:
+PARTITION BY -- работает так же как и GROUP BY только в рамках окна.
+ORDER BY -- сортировка в рамках окна
+BETWEEN -- «граница окна» AND «граница окна» — указывает нижнюю и верхнюю границу окна;
+UNBOUNDED PRECEDING -- указывает, что окно начинается с первой строки группы;
+UNBOUNDED FOLLOWING -- с помощью данной инструкции можно указать, что окно заканчивается на последней строке группы;
+CURRENT ROW -- инструкция указывает, что окно начинается или заканчивается на текущей строке;
+PRECEDING -- «Значение» определяет число строк перед текущей строкой;
+FOLLOWING -- «Значение» определяет число строк после текущей строки.
+
 SELECT
-     user_id, orderSum,
-     orderSum / allOrderSum * 100 AS shareOfRevenue
-FROM 
-(
--- 2) user_id=682|orderSum=3500руб|allOrderSum=9800руб
-     SELECT  
-     user_id,
-     orderSum as orderSum,
-     sum(orderSum) OVER w_fun_sum AS allOrderSum --вызываем оконную функцию, прописываем ей имя, и дальше уже будем с ней работать в блоке FROM или после WHERE
-FROM 
-(
--- 1) user_id=682|orderSum=3500руб
-     SELECT 
-     user_id,
-          sum(order_sum) AS orderSum
-     FROM `chint-297212.test_dataset1.e1_orders - orders`
-     GROUP BY 1)
-WINDOW w_fun_sum AS (
-     partition by orderSum --partition by работает так же как и GROUP BY только в рамках окна
-     --ORDER BY
-     --ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW - параметры рамки окна
-     ))
-ORDER BY orderSum desc
+  order_date,
+  order_sum
+  ,sum(order_sum) OVER win_part AS allOrderSum --вызываем оконную функцию, прописываем ей имя, и дальше уже будем с ней работать в блоке FROM или после WHERE
+FROM `chint-297212.test_dataset1.e1_orders - orders`
+WHERE order_date = '2014-01-23'
+WINDOW win_part AS (PARTITION BY order_date ORDER BY order_sum ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) -- параметры рамки окна. 
+ORDER BY allOrderSum
 
 -- пример оконной функции с параметром PARTITION BY() в блоке SELECT 
 WITH table1 AS (select user_id, order_date,
