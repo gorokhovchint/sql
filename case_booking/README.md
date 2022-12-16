@@ -6,4 +6,16 @@
 
 Пример итогового результата в виде:
 
+![cover](https://github.com/gorokhovchint/sql/blob/main/case_booking/img/table_1.png)
+
 Необходимо создать таблицы с произвольными данными
+
+![cover](https://github.com/gorokhovchint/sql/blob/main/case_booking/img/table_2.png)
+
+# Решение
+
+Создадим физическую модель данных 
+
+![cover](https://github.com/gorokhovchint/sql/blob/main/case_booking/img/mobel_DDL_1.png)
+
+Напишем [SQL запрос](https://github.com/gorokhovchint/sql/blob/main/case_booking/part_sql.sql) 
