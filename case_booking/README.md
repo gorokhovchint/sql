@@ -19,3 +19,5 @@
 ![cover](https://github.com/gorokhovchint/sql/blob/main/case_booking/img/mobel_DDL_1.png)
 
 Напишем [SQL запрос](https://github.com/gorokhovchint/sql/blob/main/case_booking/part_sql.sql) 
+
+Добавил [оптимизированный запрос](https://github.com/gorokhovchint/sql/blob/main/case_booking/update_part_sql.sql)
